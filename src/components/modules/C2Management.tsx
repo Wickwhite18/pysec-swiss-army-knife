@@ -1,25 +1,13 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { PlayCircle, StopCircle, Trash2, Plus, Server, Wifi, Radio, Globe, Send } from "lucide-react";
 import { toast } from "sonner";
 
-interface C2Server {
-  id: number;
-  name: string;
-  type: string;
-  address: string;
-  port: number;
-  status: "online" | "offline";
-  clients: number;
-}
+import { C2Server } from "@/types/c2";
+import C2ServerForm from "@/components/c2/C2ServerForm";
+import C2ServerList from "@/components/c2/C2ServerList";
+import { EmptyClientsState, EmptyTasksState } from "@/components/c2/C2EmptyStates";
 
 const C2Management = () => {
   const [c2Servers, setC2Servers] = useState<C2Server[]>([
@@ -27,10 +15,6 @@ const C2Management = () => {
   ]);
   
   const [activeTab, setActiveTab] = useState("c2-servers");
-  const [serverName, setServerName] = useState("");
-  const [serverType, setServerType] = useState("http");
-  const [serverAddress, setServerAddress] = useState("");
-  const [serverPort, setServerPort] = useState("8080");
 
   const handleStartServer = (id: number) => {
     setC2Servers(c2Servers.map(server => {
@@ -59,46 +43,19 @@ const C2Management = () => {
     toast.success("C2 server removed successfully");
   };
 
-  const handleAddServer = () => {
-    if (!serverName.trim()) {
-      toast.error("Please enter a server name");
-      return;
-    }
-
-    if (!serverAddress.trim()) {
-      toast.error("Please enter a server address");
-      return;
-    }
-
+  const handleAddServer = (name: string, type: string, address: string, port: number) => {
     const newServer: C2Server = {
       id: c2Servers.length + 1,
-      name: serverName,
-      type: serverType,
-      address: serverAddress,
-      port: parseInt(serverPort),
+      name,
+      type,
+      address,
+      port,
       status: "offline",
       clients: 0
     };
 
     setC2Servers([...c2Servers, newServer]);
     toast.success("C2 server added successfully");
-    
-    // Reset form
-    setServerName("");
-    setServerAddress("");
-  };
-
-  const getServerTypeIcon = (type: string) => {
-    switch (type) {
-      case "http":
-        return <Globe className="h-4 w-4" />;
-      case "tcp":
-        return <Server className="h-4 w-4" />;
-      case "dns":
-        return <Wifi className="h-4 w-4" />;
-      default:
-        return <Radio className="h-4 w-4" />;
-    }
   };
 
   return (
@@ -115,76 +72,7 @@ const C2Management = () => {
         <TabsContent value="c2-servers" className="space-y-4 mt-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-1">
-              <Card className="bg-zinc-800 border-zinc-700">
-                <CardHeader>
-                  <CardTitle>Add C2 Server</CardTitle>
-                  <CardDescription>Configure a new command & control server</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="server-name">Server Name</Label>
-                    <Input 
-                      id="server-name" 
-                      value={serverName}
-                      onChange={(e) => setServerName(e.target.value)}
-                      placeholder="Primary C2"
-                      className="bg-zinc-900 border-zinc-700"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="server-type">Protocol Type</Label>
-                    <Select value={serverType} onValueChange={setServerType}>
-                      <SelectTrigger id="server-type" className="bg-zinc-900 border-zinc-700">
-                        <SelectValue placeholder="Select server type" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-zinc-900 border-zinc-700">
-                        <SelectItem value="http">HTTP/HTTPS</SelectItem>
-                        <SelectItem value="tcp">TCP Direct</SelectItem>
-                        <SelectItem value="dns">DNS Tunneling</SelectItem>
-                        <SelectItem value="custom">Custom Protocol</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="server-address">Address</Label>
-                    <Input 
-                      id="server-address" 
-                      value={serverAddress}
-                      onChange={(e) => setServerAddress(e.target.value)}
-                      placeholder="192.168.1.100 or domain.com"
-                      className="bg-zinc-900 border-zinc-700"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="server-port">Port</Label>
-                    <Input 
-                      id="server-port" 
-                      value={serverPort}
-                      onChange={(e) => setServerPort(e.target.value)}
-                      className="bg-zinc-900 border-zinc-700"
-                      type="number"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Switch id="advanced-options" />
-                      <Label htmlFor="advanced-options">Show Advanced Options</Label>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    onClick={handleAddServer} 
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add C2 Server
-                  </Button>
-                </CardContent>
-              </Card>
+              <C2ServerForm onAddServer={handleAddServer} />
             </div>
             
             <div className="md:col-span-2">
@@ -194,83 +82,12 @@ const C2Management = () => {
                   <CardDescription>Manage your command & control servers</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {c2Servers.length > 0 ? (
-                    <Table>
-                      <TableHeader className="bg-zinc-900">
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Address</TableHead>
-                          <TableHead>Port</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Clients</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {c2Servers.map((server) => (
-                          <TableRow key={server.id}>
-                            <TableCell className="font-medium">{server.name}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                {getServerTypeIcon(server.type)}
-                                <span className="capitalize">{server.type}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="font-mono text-xs">{server.address}</TableCell>
-                            <TableCell>{server.port}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div 
-                                  className={`w-2 h-2 rounded-full ${
-                                    server.status === "online" ? "bg-green-500" : "bg-red-500"
-                                  }`} 
-                                />
-                                {server.status === "online" ? "Online" : "Offline"}
-                              </div>
-                            </TableCell>
-                            <TableCell>{server.clients}</TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                {server.status === "offline" ? (
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-8 w-8 border-zinc-700"
-                                    onClick={() => handleStartServer(server.id)}
-                                  >
-                                    <PlayCircle className="h-4 w-4 text-green-500" />
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-8 w-8 border-zinc-700"
-                                    onClick={() => handleStopServer(server.id)}
-                                  >
-                                    <StopCircle className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                )}
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-8 w-8 border-zinc-700"
-                                  onClick={() => handleDeleteServer(server.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="text-center py-8 text-zinc-400">
-                      <p>No C2 servers configured</p>
-                      <p className="text-sm mt-1">Add a C2 server to start building your infrastructure</p>
-                    </div>
-                  )}
+                  <C2ServerList 
+                    servers={c2Servers}
+                    onStartServer={handleStartServer}
+                    onStopServer={handleStopServer}
+                    onDeleteServer={handleDeleteServer}
+                  />
                 </CardContent>
               </Card>
             </div>
@@ -278,53 +95,15 @@ const C2Management = () => {
         </TabsContent>
         
         <TabsContent value="clients" className="mt-4">
-          <Card className="bg-zinc-800 border-zinc-700">
-            <CardHeader>
-              <CardTitle>Connected Clients</CardTitle>
-              <CardDescription>Manage compromised systems in your botnet</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-zinc-400">
-                <p>No connected clients</p>
-                <p className="text-sm mt-1">Launch your C2 servers and deploy payloads to see connected clients</p>
-              </div>
-            </CardContent>
-          </Card>
+          <EmptyClientsState />
         </TabsContent>
         
         <TabsContent value="tasks" className="mt-4">
-          <Card className="bg-zinc-800 border-zinc-700">
-            <CardHeader>
-              <CardTitle>Task Deployment</CardTitle>
-              <CardDescription>Send commands to compromised systems</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-zinc-400">
-                <p>No tasks available</p>
-                <p className="text-sm mt-1">Connect to clients first to deploy tasks and commands</p>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button disabled className="w-full bg-blue-600 hover:bg-blue-700">
-                <Send className="mr-2 h-4 w-4" />
-                Deploy Task
-              </Button>
-            </CardFooter>
-          </Card>
+          <EmptyTasksState />
         </TabsContent>
       </Tabs>
     </div>
   );
 };
-
-interface C2Server {
-  id: number;
-  name: string;
-  type: string;
-  address: string;
-  port: number;
-  status: "online" | "offline";
-  clients: number;
-}
 
 export default C2Management;
