@@ -11,6 +11,16 @@ import { Label } from "@/components/ui/label";
 import { PlayCircle, StopCircle, Trash2, Plus, Server, Wifi, Radio, Globe, Send } from "lucide-react";
 import { toast } from "sonner";
 
+interface C2Server {
+  id: number;
+  name: string;
+  type: string;
+  address: string;
+  port: number;
+  status: "online" | "offline";
+  clients: number;
+}
+
 const C2Management = () => {
   const [c2Servers, setC2Servers] = useState<C2Server[]>([
     { id: 1, name: "C2 Server Alpha", type: "http", address: "192.168.1.100", port: 8080, status: "offline", clients: 0 }
@@ -60,7 +70,7 @@ const C2Management = () => {
       return;
     }
 
-    const newServer = {
+    const newServer: C2Server = {
       id: c2Servers.length + 1,
       name: serverName,
       type: serverType,
