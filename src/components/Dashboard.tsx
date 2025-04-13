@@ -9,8 +9,10 @@ import ReconTools from "./modules/ReconTools";
 import SystemInfo from "./modules/SystemInfo";
 import HistoryView from "./modules/HistoryView";
 import SettingsPanel from "./modules/SettingsPanel";
+import C2Management from "./modules/C2Management";
+import SetupWizard from "./SetupWizard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, AlertTriangle } from "lucide-react";
+import { Terminal, AlertTriangle, Zap } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -26,12 +28,26 @@ const Dashboard = ({ activeModule }: DashboardProps) => {
     payloadCount: 524,
     auxiliaryCount: 347,
   });
+  
+  const [showWizard, setShowWizard] = useState(false);
 
   // This would normally connect to your Python backend
   const checkPythonBackend = () => {
     console.log("Checking Python backend status...");
     toast.info("This is a frontend demo", {
       description: "In production, this would connect to a Python backend handling Metasploit commands."
+    });
+  };
+
+  const handleLaunchWizard = () => {
+    setShowWizard(true);
+  };
+
+  const handleWizardComplete = () => {
+    setShowWizard(false);
+    setSystemStats({
+      ...systemStats,
+      status: "Connected"
     });
   };
 
@@ -43,13 +59,15 @@ const Dashboard = ({ activeModule }: DashboardProps) => {
   const renderModule = () => {
     switch (activeModule) {
       case "dashboard":
-        return <DashboardHome stats={systemStats} />;
+        return <DashboardHome stats={systemStats} onLaunchWizard={handleLaunchWizard} />;
       case "payloads":
         return <PayloadGenerator />;
       case "listeners":
         return <ListenerManager />;
       case "exploits":
         return <ExploitBrowser />;
+      case "command-control":
+        return <C2Management />;
       case "post-exploitation":
         return <PostExploitation />;
       case "network":
@@ -63,12 +81,13 @@ const Dashboard = ({ activeModule }: DashboardProps) => {
       case "settings":
         return <SettingsPanel />;
       default:
-        return <DashboardHome stats={systemStats} />;
+        return <DashboardHome stats={systemStats} onLaunchWizard={handleLaunchWizard} />;
     }
   };
 
   return (
     <div className="w-full">
+      {showWizard && <SetupWizard onComplete={handleWizardComplete} />}
       {renderModule()}
     </div>
   );
@@ -81,9 +100,10 @@ interface DashboardHomeProps {
     payloadCount: number;
     auxiliaryCount: number;
   };
+  onLaunchWizard: () => void;
 }
 
-const DashboardHome = ({ stats }: DashboardHomeProps) => {
+const DashboardHome = ({ stats, onLaunchWizard }: DashboardHomeProps) => {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -103,7 +123,7 @@ const DashboardHome = ({ stats }: DashboardHomeProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+              <div className={`w-3 h-3 rounded-full ${stats.status === "Connected" ? "bg-green-500" : "bg-red-500"}`}></div>
               {stats.status}
             </div>
           </CardContent>
@@ -157,6 +177,15 @@ const DashboardHome = ({ stats }: DashboardHomeProps) => {
               View Sessions
             </Button>
           </CardContent>
+          <CardFooter>
+            <Button 
+              onClick={onLaunchWizard}
+              className="w-full bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+            >
+              <Zap className="h-4 w-4" />
+              Launch Setup Wizard
+            </Button>
+          </CardFooter>
         </Card>
         
         <Card className="bg-zinc-800 border-zinc-700">

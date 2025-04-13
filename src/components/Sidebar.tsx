@@ -9,7 +9,8 @@ import {
   Package, 
   Network, 
   History,
-  Settings
+  Settings,
+  Server
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ const modules = [
   { id: "payloads", name: "Payloads", icon: Package },
   { id: "listeners", name: "Listeners", icon: Ear },
   { id: "exploits", name: "Exploits", icon: Rocket },
+  { id: "command-control", name: "Command & Control", icon: Server },
   { id: "post-exploitation", name: "Post Exploitation", icon: Shield },
   { id: "network", name: "Network", icon: Network },
   { id: "reconnaissance", name: "Reconnaissance", icon: Globe },
